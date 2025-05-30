@@ -33,6 +33,7 @@ public protocol AppInitializer: AnyObject {
     var dependencies: Array<AppInitializer.Type> { get }
     
     /// Defines the task/work that should be executed by this `AppInitializer`.
+    @MainActor
     func run() async throws
 }
 

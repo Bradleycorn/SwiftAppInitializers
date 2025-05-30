@@ -27,6 +27,7 @@ import SwiftUI
 ///
 /// let appInitManager = InitManager([launchInitializer1, launchInitializer2, activeInitializer])
 /// ```
+@MainActor
 public class InitManager: ObservableObject {
         
     private let notificationCenter: NotificationCenter = NotificationCenter.default
@@ -59,11 +60,13 @@ public class InitManager: ObservableObject {
     public init(_ initializers: [AppInitializer], eventsDelegate: AppInitializerEventsDelegate? = nil) {
         self.initializers = initializers
         self.eventsDelegate = eventsDelegate
-
-        self.launchTask = Task { onAppLaunch() }
-
-        notificationCenter.addObserver(self, selector: #selector(onAppActive), name: UIApplication.willEnterForegroundNotification, object: nil)
-        notificationCenter.addObserver(self, selector: #selector(onAppInactive), name: UIApplication.willResignActiveNotification, object: nil)
+        
+        onAppLaunch()
+        
+        #if os(iOS)
+            notificationCenter.addObserver(self, selector: #selector(onAppActive), name: UIApplication.willEnterForegroundNotification, object: nil)
+            notificationCenter.addObserver(self, selector: #selector(onAppInactive), name: UIApplication.willResignActiveNotification, object: nil)
+        #endif
     }
     
     /// Get notified in your App when ``InitializerPriority/appLaunch`` initializers complete successfully or fail with an error.
@@ -115,7 +118,7 @@ public class InitManager: ObservableObject {
     /// Call this method as early as possible during the launch of your app to ensure that all tasks that should be executed once at app launch
     /// are completed as quickly as possible.
     public func onAppLaunch() {
-        launchTask = Task { @MainActor in
+        launchTask = Task {
             do {
                 launchSubject.send(.pending)
                 eventsDelegate?.appLaunchStarted()
