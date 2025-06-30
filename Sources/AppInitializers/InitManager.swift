@@ -143,7 +143,7 @@ public class InitManager: ObservableObject {
     /// of calling this method directly. For more information, see the <doc:InitializationManager#Performing-initializations-When-Your-App-is-Active> documentation.
     @objc
     public func onAppActive() {
-        activeTask = Task { @MainActor in
+        activeTask = Task {
             do {
                 activeSubject.send(.pending)
                 // don't run active intiailizers until launch initializers are done
